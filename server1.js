@@ -33,6 +33,7 @@ venom
     clientInstance = client;
     resetDailyQuota();
     processMessages();
+    listenForMessages(client); // מאזין להודעות נכנסות
   })
   .catch((error) => {
     console.error(`❌ שגיאה ב-${SERVER_ID}:`, error);
@@ -56,48 +57,90 @@ async function resetDailyQuota() {
 }
 
 // שליחת הודעות
-// שליחת הודעות
 async function processMessages() {
-    // ריצה מתוזמנת כל 10 שניות
     setInterval(async () => {
-      // בדיקת מכסה יומית
       if (sentCount >= MAX_MESSAGES_PER_DAY) {
         console.log(`🚫 ${SERVER_ID} הגיע למכסה היומית (${MAX_MESSAGES_PER_DAY}).`);
         return;
       }
-  
-      // ניסיון לנעול הודעה לשליחה
+
       const message = await claimMessage();
       if (message) {
         try {
           console.log(`📨 ${SERVER_ID} שולח הודעה למספר ${message.formattedContacts}`);
-  
-          // שליחת הודעה באמצעות Venom Bot
+
           await clientInstance.sendImage(
             `${message.formattedContacts}@c.us`,
             message.imageUrl,
             'image',
             message.message
           );
-  
-          // עדכון סטטוס ההודעה ל-"sent"
+
           await updateMessageStatus(message.id, 'sent');
-  
-          // עדכון מספר ההודעות שנשלחו
           await incrementSentCount();
           sentCount++;
-  
+
           console.log(`✅ ${SERVER_ID} שלח הודעה למספר ${message.formattedContacts}`);
         } catch (error) {
-          // טיפול בשגיאה ועדכון סטטוס ההודעה ל-"error"
           console.error(`❌ ${SERVER_ID} נכשל בשליחת ההודעה:`, error.message);
           await updateMessageStatus(message.id, 'error', error.message);
         }
       } else {
-        // אם אין הודעות ממתינות
         console.log(`🚫 אין הודעות ממתינות עבור ${SERVER_ID}.`);
       }
-    }, 10000); // הפרש של 10 שניות בין הודעות
+    }, 10000);
+}
+
+// מאזין להודעות נכנסות
+function listenForMessages(client) {
+    client.onMessage(async (message) => {
+      if (message.isGroupMsg === false) { // מתעלם מהודעות קבוצתיות
+        console.log(`📥 הודעה נכנסת מ-${message.from}: ${message.body}`);
+  
+        const formattedContact = message.from.replace('@c.us', '');
+        const newMessage = {
+          message: message.body,
+          timestamp: Date.now(),
+          status: 'received',
+          serverId: SERVER_ID
+        };
+  
+        // מנגנון נעילה - ניסיון לנעול את ההודעה ב-Firebase
+        const messageRef = ref(db, `whatsapp/${formattedContact}/message_in`);
+        let locked = false;
+  
+        await runTransaction(messageRef, (data) => {
+          if (!data) {
+            data = {}; // יצירת עץ חדש אם לא קיים
+          }
+  
+          const lockKey = `lock_${SERVER_ID}`;
+          if (!data.lock) {
+            data.lock = lockKey; // נועל את ההודעה לשרת הנוכחי
+            locked = true;
+          } else if (data.lock === lockKey) {
+            locked = true; // אם כבר נעול על ידי השרת הנוכחי
+          } else {
+            locked = false; // כבר נעול לשרת אחר
+          }
+          return data;
+        });
+  
+        if (locked) {
+          console.log(`🔒 ההודעה נעולה על ידי ${SERVER_ID}.`);
+  
+          // הוספת ההודעה ל-message_in
+          const messageId = `msg_${Date.now()}`;
+          await update(messageRef, {
+            [`messages/${messageId}`]: newMessage
+          });
+  
+          console.log(`✅ הודעה נכנסת נשמרה ב-Firebase תחת message_in.`);
+        } else {
+          console.log(`🚫 ההודעה כבר בטיפול על ידי שרת אחר.`);
+        }
+      }
+    });
   }
   
 
@@ -117,7 +160,7 @@ async function claimMessage() {
             break;
           }
         }
-        if (claimedMessage) break; // צא מהלולאה אם נמצא מסר
+        if (claimedMessage) break;
       }
     }
     return messages;
@@ -125,12 +168,13 @@ async function claimMessage() {
 
   return claimedMessage;
 }
+
 async function incrementSentCount() {
-    const serverRef = ref(db, `servers/${SERVER_ID}/sentCount`);
-    await runTransaction(serverRef, (currentValue) => (currentValue || 0) + 1);
-    console.log(`✅ מספר ההודעות שנשלחו על ידי ${SERVER_ID} עודכן.`);
-  }
-  
+  const serverRef = ref(db, `servers/${SERVER_ID}/sentCount`);
+  await runTransaction(serverRef, (currentValue) => (currentValue || 0) + 1);
+  console.log(`✅ מספר ההודעות שנשלחו על ידי ${SERVER_ID} עודכן.`);
+}
+
 // עדכון סטטוס הודעה
 async function updateMessageStatus(messageId, status, error = null) {
   const messageRef = ref(db, `whatsapp/${messageId}`);

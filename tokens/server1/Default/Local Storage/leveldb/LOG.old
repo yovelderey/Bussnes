@@ -1,3 +1,6 @@
-2025/01/10-17:06:51.668 9003 Reusing MANIFEST /Users/yovelderey/server-ws/tokens/server1/Default/Local Storage/leveldb/MANIFEST-000001
-2025/01/10-17:06:51.676 9003 Recovering log #3
-2025/01/10-17:06:51.677 9003 Reusing old log /Users/yovelderey/server-ws/tokens/server1/Default/Local Storage/leveldb/000003.log 
+2025/01/10-19:52:31.135 6b07 Reusing MANIFEST /Users/yovelderey/Desktop/servers/Bussnes/tokens/server1/Default/Local Storage/leveldb/MANIFEST-000001
+2025/01/10-19:52:31.196 6b07 Recovering log #3
+2025/01/10-19:52:31.197 6b07 Reusing old log /Users/yovelderey/Desktop/servers/Bussnes/tokens/server1/Default/Local Storage/leveldb/000003.log 
+2025/01/10-19:53:32.506 6b07 Level-0 table #5: started
+2025/01/10-19:53:32.537 6b07 Level-0 table #5: 17190 bytes OK
+2025/01/10-19:53:32.577 6b07 Delete type=0 #3
