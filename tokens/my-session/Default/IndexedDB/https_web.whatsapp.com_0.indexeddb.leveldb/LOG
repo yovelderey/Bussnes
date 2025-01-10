@@ -1,0 +1,23 @@
+2025/01/10-05:30:41.654 6c0b Reusing MANIFEST /Users/yovelderey/server-ws/tokens/my-session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/01/10-05:30:41.655 6c0b Recovering log #306
+2025/01/10-05:30:41.660 6c0b Reusing old log /Users/yovelderey/server-ws/tokens/my-session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000306.log 
+2025/01/10-05:30:45.983 9503 Level-0 table #311: started
+2025/01/10-05:30:46.006 9503 Level-0 table #311: 106894 bytes OK
+2025/01/10-05:30:46.058 9503 Delete type=0 #306
+2025/01/10-05:30:46.060 6c0b Manual compaction at level-0 from '\x00u\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00v\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/01/10-05:30:47.365 a903 Compacting 1@1 + 1@2 files
+2025/01/10-05:30:47.412 a903 Generated table #312@1: 24558 keys, 902675 bytes
+2025/01/10-05:30:47.412 a903 Compacted 1@1 + 1@2 files => 902675 bytes
+2025/01/10-05:30:47.452 a903 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/01/10-05:30:47.455 a903 Delete type=2 #311
+2025/01/10-05:30:47.455 a903 Delete type=2 #308
+2025/01/10-05:35:49.078 9503 Level-0 table #314: started
+2025/01/10-05:35:49.124 9503 Level-0 table #314: 656364 bytes OK
+2025/01/10-05:35:49.162 9503 Delete type=0 #310
+2025/01/10-05:35:49.162 6c0b Manual compaction at level-0 from '\x00v\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00w\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/01/10-05:35:50.278 6c0b Compacting 1@1 + 1@2 files
+2025/01/10-05:35:50.324 6c0b Generated table #315@1: 26656 keys, 988143 bytes
+2025/01/10-05:35:50.324 6c0b Compacted 1@1 + 1@2 files => 988143 bytes
+2025/01/10-05:35:50.361 6c0b compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/01/10-05:35:50.362 6c0b Delete type=2 #314
+2025/01/10-05:35:50.362 6c0b Delete type=2 #312

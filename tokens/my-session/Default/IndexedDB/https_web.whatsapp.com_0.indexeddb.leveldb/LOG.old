@@ -1,0 +1,13 @@
+2025/01/03-06:54:45.440 8007 Reusing MANIFEST /Users/yovelderey/server-ws/tokens/my-session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/01/03-06:54:45.441 8007 Recovering log #302
+2025/01/03-06:54:45.449 8007 Reusing old log /Users/yovelderey/server-ws/tokens/my-session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000302.log 
+2025/01/03-06:54:47.108 e903 Level-0 table #307: started
+2025/01/03-06:54:47.137 e903 Level-0 table #307: 192553 bytes OK
+2025/01/03-06:54:47.175 e903 Delete type=0 #302
+2025/01/03-06:54:47.175 6303 Manual compaction at level-0 from '\x00t\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00u\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/01/03-06:54:48.609 8007 Compacting 1@1 + 1@2 files
+2025/01/03-06:54:48.672 8007 Generated table #308@1: 23446 keys, 864228 bytes
+2025/01/03-06:54:48.672 8007 Compacted 1@1 + 1@2 files => 864228 bytes
+2025/01/03-06:54:48.711 8007 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/01/03-06:54:48.711 8007 Delete type=2 #307
+2025/01/03-06:54:48.711 8007 Delete type=2 #304
