@@ -1,4 +1,27 @@
-2025/01/10-19:55:23.345 8007 Reusing MANIFEST /Users/yovelderey/Desktop/servers/Bussnes/tokens/server1/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/01/10-19:55:23.346 8007 Recovering log #107
-2025/01/10-19:55:23.355 8007 Reusing old log /Users/yovelderey/Desktop/servers/Bussnes/tokens/server1/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000107.log 
-2025/01/10-19:55:25.274 fc07 Manual compaction at level-0 from '\x002\x00\x00\x00' @ 72057594037927935 : 1 .. '\x003\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/01/13-06:45:55.744 6b07 Reusing MANIFEST /Users/yovelderey/Desktop/servers/Bussnes/tokens/server1/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/01/13-06:45:55.745 6b07 Recovering log #203
+2025/01/13-06:45:55.772 6b07 Reusing old log /Users/yovelderey/Desktop/servers/Bussnes/tokens/server1/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000203.log 
+2025/01/13-06:45:57.409 8f03 Level-0 table #209: started
+2025/01/13-06:45:57.458 8f03 Level-0 table #209: 870120 bytes OK
+2025/01/13-06:45:57.503 8f03 Delete type=0 #203
+2025/01/13-06:45:57.507 6a03 Manual compaction at level-0 from '\x00M\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00N\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/01/13-06:45:58.691 8f03 Compacting 1@1 + 2@2 files
+2025/01/13-06:45:58.802 8f03 Generated table #210@1: 66260 keys, 2232796 bytes
+2025/01/13-06:45:58.835 8f03 Generated table #211@1: 15565 keys, 287285 bytes
+2025/01/13-06:45:58.835 8f03 Compacted 1@1 + 2@2 files => 2520081 bytes
+2025/01/13-06:45:58.875 8f03 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/01/13-06:45:58.876 8f03 Delete type=2 #205
+2025/01/13-06:45:58.877 8f03 Delete type=2 #206
+2025/01/13-06:45:58.877 8f03 Delete type=2 #209
+2025/01/13-06:55:58.039 8f03 Level-0 table #213: started
+2025/01/13-06:55:58.064 8f03 Level-0 table #213: 306940 bytes OK
+2025/01/13-06:55:58.102 8f03 Delete type=0 #208
+2025/01/13-06:55:58.103 6a03 Manual compaction at level-0 from '\x00N\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00O\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/01/13-07:00:57.211 6b07 Compacting 1@1 + 2@2 files
+2025/01/13-07:00:57.284 6b07 Generated table #214@1: 67077 keys, 2234911 bytes
+2025/01/13-07:00:57.320 6b07 Generated table #215@1: 15939 keys, 320247 bytes
+2025/01/13-07:00:57.320 6b07 Compacted 1@1 + 2@2 files => 2555158 bytes
+2025/01/13-07:00:57.360 6b07 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/01/13-07:00:57.361 6b07 Delete type=2 #211
+2025/01/13-07:00:57.362 6b07 Delete type=2 #210
+2025/01/13-07:00:57.362 6b07 Delete type=2 #213

@@ -1,5 +1,5 @@
 const { initializeApp } = require('firebase/app');
-const { getDatabase, ref, runTransaction, update } = require('firebase/database');
+const { getDatabase, ref,get, runTransaction, update } = require('firebase/database');
 const venom = require('venom-bot');
 
 // הגדרות Firebase
@@ -23,6 +23,7 @@ let sentCount = 0; // מספר ההודעות שנשלחו היום
 // אתחול Venom Bot
 let clientInstance = null;
 
+
 venom
   .create({
     session: SERVER_ID,
@@ -38,6 +39,19 @@ venom
   .catch((error) => {
     console.error(`❌ שגיאה ב-${SERVER_ID}:`, error);
   });
+
+  function formatPhoneNumber(phoneNumber) {
+    // הסרת כל תווים שאינם ספרות
+    phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+  
+    // אם המספר מתחיל ב-0, מחליף את הקידומת ל-972
+    if (phoneNumber.startsWith('0')) {
+      phoneNumber = `972${phoneNumber.slice(1)}`;
+    }
+  
+    return phoneNumber; // מחזיר את המספר בפורמט אחיד ללא סימן '+'
+  }
+  
 
 // איפוס המכסה היומית אם עבר יום חדש
 async function resetDailyQuota() {
@@ -58,90 +72,112 @@ async function resetDailyQuota() {
 
 // שליחת הודעות
 async function processMessages() {
-    setInterval(async () => {
-      if (sentCount >= MAX_MESSAGES_PER_DAY) {
-        console.log(`🚫 ${SERVER_ID} הגיע למכסה היומית (${MAX_MESSAGES_PER_DAY}).`);
-        return;
+  setInterval(async () => {
+    if (sentCount >= MAX_MESSAGES_PER_DAY) {
+      console.log(`🚫 ${SERVER_ID} הגיע למכסה היומית (${MAX_MESSAGES_PER_DAY}).`);
+      return;
+    }
+
+    const message = await claimMessage();
+    if (message) {
+      try {
+        console.log(`📨 ${SERVER_ID} שולח הודעה למספר ${message.formattedContacts}`);
+
+        await clientInstance.sendImage(
+          `${message.formattedContacts}@c.us`,
+          message.imageUrl,
+          'image',
+          message.message
+        );
+
+        await updateMessageStatus(message.id, 'sent');
+        await incrementSentCount();
+        sentCount++;
+
+        console.log(`✅ ${SERVER_ID} שלח הודעה למספר ${message.formattedContacts}`);
+      } catch (error) {
+        console.error(`❌ ${SERVER_ID} נכשל בשליחת ההודעה:`, error.message);
+        await updateMessageStatus(message.id, 'error', error.message);
       }
-
-      const message = await claimMessage();
-      if (message) {
-        try {
-          console.log(`📨 ${SERVER_ID} שולח הודעה למספר ${message.formattedContacts}`);
-
-          await clientInstance.sendImage(
-            `${message.formattedContacts}@c.us`,
-            message.imageUrl,
-            'image',
-            message.message
-          );
-
-          await updateMessageStatus(message.id, 'sent');
-          await incrementSentCount();
-          sentCount++;
-
-          console.log(`✅ ${SERVER_ID} שלח הודעה למספר ${message.formattedContacts}`);
-        } catch (error) {
-          console.error(`❌ ${SERVER_ID} נכשל בשליחת ההודעה:`, error.message);
-          await updateMessageStatus(message.id, 'error', error.message);
-        }
-      } else {
-        console.log(`🚫 אין הודעות ממתינות עבור ${SERVER_ID}.`);
-      }
-    }, 10000);
+    } else {
+      console.log(`🚫 אין הודעות ממתינות עבור ${SERVER_ID}.`);
+    }
+  }, 10000);
 }
+
 
 // מאזין להודעות נכנסות
 function listenForMessages(client) {
-    client.onMessage(async (message) => {
-      if (message.isGroupMsg === false) { // מתעלם מהודעות קבוצתיות
-        console.log(`📥 הודעה נכנסת מ-${message.from}: ${message.body}`);
-  
-        const formattedContact = message.from.replace('@c.us', '');
-        const newMessage = {
-          message: message.body,
-          timestamp: Date.now(),
-          status: 'received',
-          serverId: SERVER_ID
-        };
-  
-        // מנגנון נעילה - ניסיון לנעול את ההודעה ב-Firebase
-        const messageRef = ref(db, `whatsapp/${formattedContact}/message_in`);
-        let locked = false;
-  
-        await runTransaction(messageRef, (data) => {
-          if (!data) {
-            data = {}; // יצירת עץ חדש אם לא קיים
-          }
-  
-          const lockKey = `lock_${SERVER_ID}`;
-          if (!data.lock) {
-            data.lock = lockKey; // נועל את ההודעה לשרת הנוכחי
-            locked = true;
-          } else if (data.lock === lockKey) {
-            locked = true; // אם כבר נעול על ידי השרת הנוכחי
-          } else {
-            locked = false; // כבר נעול לשרת אחר
-          }
-          return data;
-        });
-  
-        if (locked) {
-          console.log(`🔒 ההודעה נעולה על ידי ${SERVER_ID}.`);
-  
-          // הוספת ההודעה ל-message_in
-          const messageId = `msg_${Date.now()}`;
-          await update(messageRef, {
-            [`messages/${messageId}`]: newMessage
-          });
-  
-          console.log(`✅ הודעה נכנסת נשמרה ב-Firebase תחת message_in.`);
-        } else {
-          console.log(`🚫 ההודעה כבר בטיפול על ידי שרת אחר.`);
+  client.onMessage(async (message) => {
+    if (!message.isGroupMsg) { // מתעלם מהודעות קבוצתיות
+      console.log(`📥 הודעה נכנסת מ-${message.from}: ${message.body}`);
+
+      const formattedContact = formatPhoneNumber(message.from.replace('@c.us', ''));
+      const whatsappRef = ref(db, 'whatsapp');
+
+      try {
+        const snapshot = await get(whatsappRef);
+        if (!snapshot.exists()) {
+          console.log(`🚫 אין הודעות שנשלחו למספר ${formattedContact}.`);
+          return;
         }
+
+        const data = snapshot.val();
+        let matchedMessagePath = null; // הנתיב להודעה התואמת
+        let latestTimestamp = null; // זמן ההודעה האחרונה שנשלחה
+
+        // חיפוש הודעה תואמת
+        for (const [userId, userEvents] of Object.entries(data)) {
+          for (const [eventId, messages] of Object.entries(userEvents)) {
+            for (const [msgId, msgData] of Object.entries(messages)) {
+              if (
+                msgData.formattedContacts === formattedContact && // התאמה לפי מספר הטלפון
+                msgData.status === 'sent' &&                     // רק הודעות שנשלחו
+                (!latestTimestamp || new Date(msgData.timestamp) > latestTimestamp) // ההודעה האחרונה
+              ) {
+                matchedMessagePath = `whatsapp/${userId}/${eventId}/${msgId}`;
+                latestTimestamp = new Date(msgData.timestamp);
+              }
+            }
+          }
+        }
+
+        if (matchedMessagePath) {
+          // עדכון ההודעה עם התשובה שהתקבלה
+          const receivedMessageId = `msg_${Date.now()}`; // מזהה ייחודי לתשובה
+          const updateData = {
+            [`receivedMessages/${receivedMessageId}`]: message.body,
+          };
+
+          // שמירת התשובה ב-Firebase
+          await update(ref(db, matchedMessagePath), updateData);
+
+          console.log(`✅ התשובה נשמרה תחת ${matchedMessagePath}`);
+        } else {
+          console.log(`🚫 לא נמצאה הודעה תואמת למספר ${formattedContact}.`);
+        }
+      } catch (error) {
+        console.error(`❌ שגיאה בטיפול בהודעה נכנסת:`, error.message);
       }
-    });
-  }
+    }
+  });
+}
+
+
+
+
+async function saveMessageToFirebase(userId, eventId, messageId, messageData) {
+  const messageRef = ref(db, `whatsapp/${userId}/${eventId}/${messageId}`);
+  await update(messageRef, {
+    ...messageData,
+    currentUserUid: userId, // מזהה המשתמש
+    eventUserId: eventId,  // מזהה האירוע
+  });
+  console.log(`✅ הודעה נשמרה ב-Firebase: ${messageId}`);
+}
+
+
+
   
 
 // נעילת הודעה (Claim)
@@ -149,25 +185,35 @@ async function claimMessage() {
   const whatsappRef = ref(db, 'whatsapp');
   let claimedMessage = null;
 
-  await runTransaction(whatsappRef, (messages) => {
-    if (messages) {
-      for (const [userId, userMessages] of Object.entries(messages)) {
-        for (const [key, message] of Object.entries(userMessages)) {
-          if (message.status === 'pending') {
-            claimedMessage = { id: `${userId}/${key}`, ...message };
-            userMessages[key].status = 'sending';
-            userMessages[key].serverId = SERVER_ID;
-            break;
+  await runTransaction(whatsappRef, (users) => {
+    if (users) {
+      for (const [userId, events] of Object.entries(users)) {
+        for (const [eventId, messages] of Object.entries(events)) {
+          for (const [messageId, messageData] of Object.entries(messages)) {
+            if (messageData.status === 'pending') {
+              claimedMessage = {
+                id: `${userId}/${eventId}/${messageId}`,
+                ...messageData,
+                currentUserUid: userId,
+                eventUserId: eventId,
+              };
+              messageData.status = 'sending'; // עדכון סטטוס
+              messageData.serverId = SERVER_ID; // שמירת מזהה השרת
+              break;
+            }
           }
+          if (claimedMessage) break;
         }
         if (claimedMessage) break;
       }
     }
-    return messages;
+    return users;
   });
 
   return claimedMessage;
 }
+
+
 
 async function incrementSentCount() {
   const serverRef = ref(db, `servers/${SERVER_ID}/sentCount`);
@@ -177,11 +223,16 @@ async function incrementSentCount() {
 
 // עדכון סטטוס הודעה
 async function updateMessageStatus(messageId, status, error = null) {
-  const messageRef = ref(db, `whatsapp/${messageId}`);
+  const [userId, eventId, msgId] = messageId.split('/');
+  const messageRef = ref(db, `whatsapp/${userId}/${eventId}/${msgId}`);
   const updateData = { status };
+
   if (error) {
     updateData.error = error;
   }
+
   await update(messageRef, updateData);
   console.log(`✅ סטטוס ההודעה ${messageId} עודכן ל-${status}`);
 }
+
+
